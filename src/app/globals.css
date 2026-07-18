@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ============================================================
+   SYSTÈME DE DESIGN — Aliavita · Prism
+   Azur solaire : bleu ciel vif + blanc + or chaud + statuts couleur
+   Pensé mobile-first, terrain, grandes cibles tactiles
+   ============================================================ */
+
+@theme {
+  /* Bleu ciel — famille primaire */
+  --color-marine-950: #082A45;
+  --color-marine-900: #0C3C61;
+  --color-marine-800: #0369A1;
+  --color-marine-700: #0284C7;
+  --color-marine-600: #0EA5E9;
+  --color-marine-500: #38BDF8;
+  --color-marine-100: #BAE6FD;
+  --color-marine-50:  #E0F2FE;
+
+  /* Or / Ambre — accent chaud */
+  --color-turquoise-600: #B45309;
+  --color-turquoise-500: #D97706;
+  --color-turquoise-400: #F59E0B;
+  --color-turquoise-200: #FDE68A;
+  --color-turquoise-100: #FEF3C7;
+  --color-turquoise-50:  #FFFBEB;
+
+  /* Statuts */
+  --color-vert: #16a34a;
+  --color-vert-soft: #dcfce7;
+  --color-orange: #f59e0b;
+  --color-orange-soft: #fef3c7;
+  --color-rouge: #dc2626;
+  --color-rouge-soft: #fee2e2;
+
+  /* Neutres */
+  --color-ardoise-900: #0f172a;
+  --color-ardoise-700: #334155;
+  --color-ardoise-500: #64748b;
+  --color-ardoise-300: #cbd5e1;
+  --color-ardoise-100: #f1f5f9;
+  --color-ardoise-50: #f8fafc;
+
+  /* Pastels — thème clair et doux (crème + menthe / pêche / lavande) */
+  --color-menthe-50:  #e9f7f2;
+  --color-menthe-100: #cbeadf;
+  --color-menthe-200: #a9dccb;
+  --color-menthe-400: #5fc6ac;
+  --color-menthe-600: #2e9e83;
+  --color-menthe-700: #1f7a66;
+  --color-peche-50:   #fdefe8;
+  --color-peche-100:  #fad7c6;
+  --color-peche-200:  #f6bba1;
+  --color-peche-400:  #f09b73;
+  --color-peche-600:  #dc6e44;
+  --color-peche-700:  #b5532f;
+  --color-lavande-50:  #f1eefb;
+  --color-lavande-100: #ded6f4;
+  --color-lavande-200: #c7bbec;
+  --color-lavande-400: #a491de;
+  --color-lavande-600: #7c68c2;
+  --color-lavande-700: #5c4c9c;
+  /* Surface crème pour les fonds clairs */
+  --color-creme: #fbf7f1;
+  --color-creme-200: #f3ece1;
+
+  --font-sans: var(--font-hanken), system-ui, sans-serif;
+
+  --radius-xl2: 1.25rem;
+}
+
+:root {
+  --background: #F0F9FF;
+  --foreground: #082A45;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* zone de confort en bas pour les téléphones (encoche) */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Titres en Bricolage (police d'affichage commune Aliavita) */
+h1, h2, h3, h4 {
+  font-family: var(--font-bricolage), var(--font-hanken), ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Boutons larges pour usage terrain */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-all duration-150 active:scale-[0.98] select-none;
+  min-height: 52px;
+  padding: 0 1.25rem;
+  font-size: 1.05rem;
+}
+.btn-primary {
+  @apply bg-marine-900 text-white shadow-lg shadow-marine-900/20 hover:bg-marine-800;
+}
+.btn-turquoise {
+  @apply bg-turquoise-500 text-marine-950 shadow-lg shadow-turquoise-500/20 hover:bg-turquoise-400;
+}
+.btn-ghost {
+  @apply bg-white text-marine-900 border-2 border-marine-100 hover:border-marine-500;
+}
+.btn-danger {
+  @apply bg-rouge text-white hover:opacity-90;
+}
+
+.card {
+  @apply bg-white rounded-3xl shadow-sm border border-ardoise-100 p-5;
+}
+
+.label-field {
+  @apply block text-sm font-semibold text-ardoise-700 mb-2;
+}
+.input-field {
+  @apply w-full rounded-2xl border-2 border-ardoise-300 bg-white px-4 text-lg text-ardoise-900 outline-none transition focus:border-turquoise-500;
+  min-height: 54px;
+}
+
+/* Pastille statut */
+.dot {
+  @apply inline-block h-3 w-3 rounded-full;
+}
+
+/* Masquer les flèches des inputs number */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ardoise-300);
+  border-radius: 999px;
+}

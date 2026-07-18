@@ -1,0 +1,33 @@
+{
+  "name": "Qualité Soins Intensifs",
+  "short_name": "Qualité SI",
+  "description": "Suivi qualité et préparation à la certification HAS — Unité de Soins Intensifs",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F0F9FF",
+  "theme_color": "#0284C7",
+  "lang": "fr",
+  "categories": ["health", "medical", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
