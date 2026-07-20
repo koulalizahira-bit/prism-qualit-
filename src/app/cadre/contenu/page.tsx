@@ -19,7 +19,7 @@ import {
   addAgentAction,
   deleteAgentAction,
 } from "@/app/actions/planning";
-import { Settings, ListChecks, BookOpen, Plus, Trash2, GraduationCap, CalendarClock, Users } from "lucide-react";
+import { Settings, ListChecks, BookOpen, Plus, Trash2, GraduationCap, CalendarClock, Users, DownloadCloud } from "lucide-react";
 
 export default async function ContenuPage() {
   const db = await getDb();
@@ -43,13 +43,11 @@ export default async function ContenuPage() {
       <section className="card">
         <h2 className="mb-4 text-lg font-bold text-marine-900">Paramètres du service</h2>
         <form action={updateConfigAction} className="grid gap-4 sm:grid-cols-2">
+          {/* Le nom du service se règle désormais depuis Mon profil — on le repasse tel quel. */}
+          <input type="hidden" name="nomService" value={db.config.nomService} />
           <div className="sm:col-span-2">
             <label className="label-field">Établissement / pôle</label>
             <input name="nomEtablissement" defaultValue={db.config.nomEtablissement} className="input-field" />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="label-field">Nom du service</label>
-            <input name="nomService" defaultValue={db.config.nomService} className="input-field" />
           </div>
           <div>
             <label className="label-field">Objectif HAS (%)</label>
@@ -71,6 +69,24 @@ export default async function ContenuPage() {
             <button className="btn btn-primary">Enregistrer les paramètres</button>
           </div>
         </form>
+      </section>
+
+      {/* SAUVEGARDE */}
+      <section className="card">
+        <h2 className="mb-1 flex items-center gap-2 text-lg font-bold text-marine-900">
+          <DownloadCloud className="h-5 w-5 text-turquoise-500" /> Sauvegarde
+        </h2>
+        <p className="mb-4 text-sm text-ardoise-500">
+          Téléchargez une copie complète de toutes les données de l&apos;application (audits, PAQSS,
+          effectif, formations, planning…) au format JSON.
+        </p>
+        <a
+          href="/api/export-donnees"
+          download
+          className="btn btn-ghost inline-flex w-fit !min-h-[44px]"
+        >
+          <DownloadCloud className="h-4 w-4" /> Exporter toutes les données
+        </a>
       </section>
 
       {/* ITEMS PAR TOUR */}

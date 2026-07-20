@@ -5,6 +5,13 @@ import type { StatutAction } from "./types";
 const MARINE: [number, number, number] = [11, 36, 71];
 const TURQUOISE: [number, number, number] = [20, 184, 196];
 
+export interface GrilleCoveragePdf {
+  nom: string;
+  type: "service" | "thematique";
+  score: number | null;
+  date: string | null;
+}
+
 export interface ServicePdfData {
   etablissement: string;
   service: string;
@@ -15,8 +22,30 @@ export interface ServicePdfData {
   evolution: { label: string; score: number }[];
   themes: { nom: string; score: number | null }[];
   sections: { nom: string; score: number | null }[];
+  grilles: GrilleCoveragePdf[];
   alertes: { nom: string; score: number | null }[];
   formations: { nom: string; pct: number | null; objectif: number }[];
+}
+
+function grillesTable(doc: jsPDF, y: number, grilles: GrilleCoveragePdf[]): number {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...MARINE);
+  doc.text("Couverture des audits (service + thématiques)", 14, y);
+  autoTable(doc, {
+    startY: y + 3,
+    head: [["Audit", "Type", "Score", "Dernière réalisation"]],
+    body: grilles.map((g) => [
+      g.nom,
+      g.type === "service" ? "Service" : "Thématique",
+      fmt(g.score),
+      g.date ?? "Non réalisé",
+    ]),
+    headStyles: { fillColor: MARINE, fontSize: 9 },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: { 1: { halign: "center", cellWidth: 26 }, 2: { halign: "center", cellWidth: 20 }, 3: { halign: "center", cellWidth: 36 } },
+  });
+  return finalY(doc) + 8;
 }
 
 function header(doc: jsPDF, titre: string, sousTitre: string) {
@@ -80,7 +109,7 @@ export function generateServicePdf(d: ServicePdfData) {
   let y = finalY(doc) + 8;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("Conformité par tour d'audit", 14, y);
+  doc.text("Conformité par tour d'audit (audit service)", 14, y);
   autoTable(doc, {
     startY: y + 3,
     head: [["Tour", "Score"]],
@@ -90,7 +119,8 @@ export function generateServicePdf(d: ServicePdfData) {
     columnStyles: { 1: { halign: "center", cellWidth: 30 } },
   });
 
-  y = finalY(doc) + 8;
+  y = grillesTable(doc, finalY(doc) + 8, d.grilles);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.text("Évolution des audits", 14, y);
@@ -281,7 +311,8 @@ export function generateAuditCrPdf(d: AuditCrData): void {
 // ─── Rapport certification HAS ────────────────────────────────────────────────
 
 export interface CertifPdfData extends ServicePdfData {
-  paqss: { titre: string; statut: StatutAction; echeance: string; responsable: string }[];
+  planCadre: { titre: string; statut: StatutAction; echeance: string; responsable: string }[];
+  planEquipe: { titre: string; statut: StatutAction; echeance: string; responsable: string; auditNom: string }[];
   afgsuAlerte: { rouge: number; orange: number; total: number; parRole: Record<string, number> };
 }
 
@@ -331,11 +362,12 @@ export function generateCertifPdf(d: CertifPdfData): void {
     },
   });
 
-  let y = finalY(doc) + 8;
+  let y = grillesTable(doc, finalY(doc) + 8, d.grilles);
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(...MARINE);
-  doc.text("Évolution de la conformité", 14, y);
+  doc.text("Évolution de la conformité (audit service)", 14, y);
   autoTable(doc, {
     startY: y + 3,
     head: [["Audit", ...d.evolution.map((h) => h.label)]],
@@ -344,19 +376,38 @@ export function generateCertifPdf(d: CertifPdfData): void {
     bodyStyles: { fontSize: 9 },
   });
 
-  // Page 2 : PAQSS
+  // Page 2 : Plan d'action équipe (terrain, issu des audits)
   doc.addPage();
-  header(doc, "Plan d'amélioration qualité (PAQSS)", `${d.etablissement} — ${d.service}`);
+  header(doc, "Plan d'action équipe", `Actions de terrain issues des audits — ${d.etablissement} — ${d.service}`);
+  if (d.planEquipe.length === 0) {
+    doc.setTextColor(80);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Aucune action d'équipe pour le moment.", 14, 44);
+  } else {
+    autoTable(doc, {
+      startY: 38,
+      head: [["Action", "Audit source", "Statut", "Responsable", "Échéance"]],
+      body: d.planEquipe.map((p) => [p.titre, p.auditNom, STATUT_LABEL[p.statut], p.responsable, p.echeance]),
+      headStyles: { fillColor: MARINE, fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      columnStyles: { 2: { halign: "center", cellWidth: 24 }, 4: { halign: "center", cellWidth: 22 } },
+    });
+  }
+
+  // Page 3 : Plan d'action cadre (PAQSS — pilotage du service)
+  doc.addPage();
+  header(doc, "Plan d'action cadre — PAQSS", `Pilotage du service — ${d.etablissement} — ${d.service}`);
   autoTable(doc, {
     startY: 38,
     head: [["Action", "Statut", "Responsable", "Échéance"]],
-    body: d.paqss.map((p) => [p.titre, STATUT_LABEL[p.statut], p.responsable, p.echeance]),
+    body: d.planCadre.map((p) => [p.titre, STATUT_LABEL[p.statut], p.responsable, p.echeance]),
     headStyles: { fillColor: MARINE, fontSize: 9 },
     bodyStyles: { fontSize: 9 },
     columnStyles: { 1: { halign: "center", cellWidth: 28 }, 3: { halign: "center", cellWidth: 24 } },
   });
 
-  // Page 3 : habilitations et formations
+  // Page 4 : habilitations et formations
   doc.addPage();
   header(doc, "Formations & habilitations", `${d.etablissement} — ${d.service}`);
 

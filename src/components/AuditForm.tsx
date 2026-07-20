@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { saveAuditAction } from "@/app/actions/audit";
 import type { Reponse } from "@/lib/types";
-import { Check, X, SlashSquare, Save, Loader2, BedDouble, Undo2 } from "lucide-react";
+import { Check, X, SlashSquare, Save, Loader2, BedDouble, Undo2, AlertTriangle, ArrowLeft, ClipboardCheck } from "lucide-react";
 
 interface ZoneLite { id: string; label: string }
 interface ItemLite { id: string; libelle: string; themeId: string }
@@ -35,6 +35,7 @@ export default function AuditForm({
   const section = sections.find((s) => s.id === secId)!;
   const [zoneId, setZoneId] = useState(section.zones[0].id);
   const [pending, startTransition] = useTransition();
+  const [showRecap, setShowRecap] = useState(false);
 
   const skipKey = (sid: string, zid: string) => `${sid}:${zid}`;
   const isSkipped = (sid: string, zid: string) => skipped.includes(skipKey(sid, zid));
@@ -81,11 +82,28 @@ export default function AuditForm({
   const zoneAnswered = (zid: string) => section.items.filter((it) => valeurs[it.id]?.[zid]).length;
   const currentSkipped = isSkipped(secId, zoneId);
 
+  // Récap des non-conformités saisies, groupées par section — pour relecture avant validation.
+  const nonConformes = useMemo(() => {
+    return sections
+      .map((s) => {
+        const items = s.items.flatMap((it) => {
+          const zonesNon = s.zones.filter((z) => valeurs[it.id]?.[z.id] === "NON");
+          return zonesNon.map((z) => ({ libelle: it.libelle, zone: z.label }));
+        });
+        return { section: s.nom, items };
+      })
+      .filter((g) => g.items.length > 0);
+  }, [sections, valeurs]);
+
   function submit() {
-    if (answered.total === 0) return;
     startTransition(() => {
       void saveAuditAction(roulement, valeurs, {}, grilleId);
     });
+  }
+
+  function openRecap() {
+    if (answered.total === 0) return;
+    setShowRecap(true);
   }
 
   return (
@@ -235,9 +253,9 @@ export default function AuditForm({
             <span className="font-bold text-marine-900">Score : {score === null ? "—" : `${score}%`}</span>
             <span className="ml-2 text-xs text-ardoise-500">{answered.total} item(s) évalué(s)</span>
           </div>
-          <button onClick={submit} disabled={pending || answered.total === 0} className="btn btn-primary disabled:opacity-50">
-            {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-            {pending ? "Enregistrement…" : "Valider l'audit"}
+          <button onClick={openRecap} disabled={pending || answered.total === 0} className="btn btn-primary disabled:opacity-50">
+            <ClipboardCheck className="h-5 w-5" />
+            Valider l&apos;audit
           </button>
         </div>
         <div style={{ height: "env(safe-area-inset-bottom)" }} />
@@ -246,6 +264,75 @@ export default function AuditForm({
       <p className="text-center text-xs text-ardoise-400">
         Auditez uniquement les secteurs occupés — marquez les autres « inoccupé ».
       </p>
+
+      {/* ── Récapitulatif avant validation ── */}
+      {showRecap && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-marine-900/40 px-0 py-0 sm:items-center sm:px-4 sm:py-6">
+          <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white sm:rounded-3xl">
+            <div className="border-b border-ardoise-100 px-5 py-4">
+              <h2 className="text-lg font-extrabold text-marine-900">Vérifier avant d&apos;enregistrer</h2>
+              <p className="text-sm text-ardoise-500">Relisez les non-conformités saisies, puis confirmez.</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="mb-4 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-2xl bg-vert-soft py-3">
+                  <p className="text-2xl font-black text-vert">{answered.o}</p>
+                  <p className="text-[11px] font-semibold text-vert">Conformes</p>
+                </div>
+                <div className="rounded-2xl bg-rouge-soft py-3">
+                  <p className="text-2xl font-black text-rouge">{answered.n}</p>
+                  <p className="text-[11px] font-semibold text-rouge">Non conformes</p>
+                </div>
+                <div className="rounded-2xl bg-ardoise-100 py-3">
+                  <p className="text-2xl font-black text-ardoise-600">{score === null ? "—" : `${score}%`}</p>
+                  <p className="text-[11px] font-semibold text-ardoise-600">Score</p>
+                </div>
+              </div>
+
+              {nonConformes.length === 0 ? (
+                <p className="rounded-2xl bg-vert-soft px-4 py-6 text-center text-sm font-semibold text-vert">
+                  Aucune non-conformité relevée. 👍
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {nonConformes.map((g) => (
+                    <div key={g.section}>
+                      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ardoise-500">
+                        <AlertTriangle className="h-3.5 w-3.5 text-rouge" /> {g.section}
+                      </p>
+                      <ul className="space-y-1.5">
+                        {g.items.map((it, i) => (
+                          <li key={i} className="rounded-xl bg-rouge-soft/50 px-3 py-2 text-sm text-marine-900">
+                            {it.libelle} <span className="text-ardoise-500">— {it.zone}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 border-t border-ardoise-100 px-5 py-4">
+              <button
+                onClick={() => setShowRecap(false)}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-ardoise-100 px-4 py-3 text-sm font-bold text-marine-800"
+              >
+                <ArrowLeft className="h-4 w-4" /> Modifier
+              </button>
+              <button
+                onClick={submit}
+                disabled={pending}
+                className="btn btn-primary flex-1 disabled:opacity-50"
+              >
+                {pending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                {pending ? "Enregistrement…" : "Confirmer et enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

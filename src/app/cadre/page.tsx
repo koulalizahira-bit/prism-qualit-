@@ -14,9 +14,8 @@ import { getPhraseduJour } from "@/lib/quotes";
 import { formatDate } from "@/lib/ui";
 import {
   ClipboardCheck,
-  Compass,
-  GraduationCap,
-  ShieldCheck,
+  Trophy,
+  FileText,
   ChevronRight,
   AlertTriangle,
   TrendingUp,
@@ -50,6 +49,13 @@ export default async function CadreHome() {
   const axes = axesPrioritaires(db, 1);
   const topAxe = axes[0] ?? null;
   const topItem = topAxe ? piresItemsTheme(db, topAxe.theme.id, 1)[0] : null;
+
+  // Aperçu quiz équipe (repris de /cadre/quiz)
+  const quizResults = db.quizResults ?? [];
+  const quizTentatives = quizResults.length;
+  const quizTotalQ = quizResults.reduce((s, r) => s + r.total, 0);
+  const quizTotalBon = quizResults.reduce((s, r) => s + r.correct, 0);
+  const quizScoreMoyen = quizTotalQ > 0 ? Math.round((quizTotalBon / quizTotalQ) * 100) : null;
 
   const delta =
     evolution.length >= 2
@@ -304,59 +310,38 @@ export default async function CadreHome() {
         </Link>
       )}
 
-      {/* ── Accès rapides ── */}
-      <div>
-        <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-ardoise-400">
-          Accès rapides
-        </p>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {[
-            {
-              href: "/cadre/paqss",
-              icon: <Compass className="h-5 w-5" />,
-              label: "Démarche",
-              sub: "Plan d'action",
-              accent: "text-turquoise-600",
-              bg: "bg-turquoise-50 hover:bg-turquoise-100 border-turquoise-100",
-            },
-            {
-              href: "/cadre/equipe",
-              icon: <GraduationCap className="h-5 w-5" />,
-              label: "Formation",
-              sub: "Habilitations",
-              accent: "text-marine-600",
-              bg: "bg-marine-50 hover:bg-marine-100 border-marine-100",
-            },
-            {
-              href: "/cadre/has",
-              icon: <ShieldCheck className="h-5 w-5" />,
-              label: "HAS V2025",
-              sub: "Certification",
-              accent: "text-indigo-600",
-              bg: "bg-indigo-50 hover:bg-indigo-100 border-indigo-100",
-            },
-            {
-              href: "/cadre/rapports",
-              icon: <Target className="h-5 w-5" />,
-              label: "Rapports",
-              sub: "Analyses PDF",
-              accent: "text-ardoise-600",
-              bg: "bg-ardoise-50 hover:bg-ardoise-100 border-ardoise-100",
-            },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col gap-2 rounded-2xl border px-4 py-3.5 transition-colors ${item.bg}`}
-            >
-              <span className={item.accent}>{item.icon}</span>
-              <div>
-                <p className="text-sm font-bold text-marine-900">{item.label}</p>
-                <p className="text-xs text-ardoise-400">{item.sub}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+      {/* ── Quiz équipe + Rapports — les deux seuls accès non présents dans le menu latéral ── */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Link
+          href="/cadre/quiz"
+          className="flex flex-col gap-2 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3.5 transition-colors hover:bg-amber-100"
+        >
+          <span className="flex items-center justify-between">
+            <Trophy className="h-5 w-5 text-amber-600" />
+            {quizScoreMoyen !== null && (
+              <span className="text-lg font-black text-amber-700">{quizScoreMoyen}%</span>
+            )}
+          </span>
+          <div>
+            <p className="text-sm font-bold text-marine-900">Quiz de l&apos;équipe</p>
+            <p className="text-xs text-ardoise-500">
+              {quizTentatives > 0
+                ? `${quizTentatives} tentative${quizTentatives > 1 ? "s" : ""} · score moyen`
+                : "Aucune tentative pour l'instant"}
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/cadre/rapports"
+          className="flex flex-col gap-2 rounded-2xl border border-ardoise-100 bg-ardoise-50 px-4 py-3.5 transition-colors hover:bg-ardoise-100"
+        >
+          <FileText className="h-5 w-5 text-ardoise-600" />
+          <div>
+            <p className="text-sm font-bold text-marine-900">Rapports</p>
+            <p className="text-xs text-ardoise-500">Analyses &amp; exports PDF</p>
+          </div>
+        </Link>
       </div>
 
     </div>

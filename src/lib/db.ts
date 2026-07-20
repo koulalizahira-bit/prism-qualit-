@@ -202,6 +202,14 @@ export async function updateConfig(patch: Partial<Database["config"]>): Promise<
   await saveDb(db);
 }
 
+export async function updateUserDisplayName(userId: string, displayName: string): Promise<void> {
+  const db = await getDb();
+  const user = db.users.find((u) => u.id === userId);
+  if (!user) return;
+  user.displayName = displayName;
+  await saveDb(db);
+}
+
 export async function upsertFiche(fiche: Fiche): Promise<void> {
   const db = await getDb();
   const i = db.fiches.findIndex((f) => f.id === fiche.id);

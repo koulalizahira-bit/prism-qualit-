@@ -9,6 +9,9 @@ import {
   formationStats,
   themeEvolution,
   itemsNonConformes,
+  grillesCoverage,
+  plansCadre,
+  plansEquipeParAudit,
 } from "@/lib/scoring";
 import { recyclagesEnAlerte } from "@/lib/recyclage";
 import { PdfServiceButton, PdfAuditCrButton, PdfCertifButton } from "@/components/PdfButtons";
@@ -55,6 +58,12 @@ export default async function RapportsPage() {
       .slice()
       .sort((a, b) => a.ordre - b.ordre)
       .map((s) => ({ nom: s.nom, score: last ? auditSectionScore(last, s) : null })),
+    grilles: grillesCoverage(db).map((c) => ({
+      nom: c.grille.nom,
+      type: c.grille.type,
+      score: c.score,
+      date: c.dernier ? formatDate(c.dernier.date) : null,
+    })),
     alertes: thematiquesEnAlerte(db).map((a) => ({ nom: a.theme.nom, score: a.score })),
     formations: formationStats(db).map((s) => ({ nom: s.formation.nom, pct: s.pct, objectif: s.formation.objectif })),
   };
@@ -100,14 +109,28 @@ export default async function RapportsPage() {
   };
 
   // ---- Dossier HAS ----
+  const auditNomPourGrille = (auditId: string): string => {
+    const audit = db.audits.find((a) => a.id === auditId);
+    const grilleId = audit?.grilleId ?? "g-service";
+    return (db.grilles ?? []).find((g) => g.id === grilleId)?.nom ?? "Audit service";
+  };
   const certifData: CertifPdfData = {
     ...serviceData,
-    paqss: db.paqss.map((p) => ({
+    planCadre: plansCadre(db).map((p) => ({
       titre: p.titre,
       statut: p.statut,
       echeance: p.echeance,
       responsable: p.responsable,
     })),
+    planEquipe: plansEquipeParAudit(db).flatMap((g) =>
+      g.actions.map((p) => ({
+        titre: p.titre,
+        statut: p.statut,
+        echeance: p.echeance,
+        responsable: p.responsable,
+        auditNom: auditNomPourGrille(g.auditId),
+      })),
+    ),
     afgsuAlerte: recyclage,
   };
 

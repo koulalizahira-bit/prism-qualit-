@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { getDb } from "@/lib/db";
 import PlansDemarche from "@/components/PlansDemarche";
 import PdfQuickLink from "@/components/PdfQuickLink";
 import { plansCadre, plansEquipeParAudit } from "@/lib/scoring";
 import type { EquipeGroupe } from "@/components/PlanEquipeView";
-import { Rocket } from "lucide-react";
+import { Rocket, ClipboardList } from "lucide-react";
 
 export default async function CadrePaqssPage({
   searchParams,
@@ -43,8 +44,15 @@ export default async function CadrePaqssPage({
           Deux plans complémentaires : le plan de <strong>terrain</strong> de l&apos;équipe (issu des audits)
           et le plan de <strong>pilotage</strong> du cadre (PAQSS service).
         </p>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <PdfQuickLink />
+          <Link
+            href="/cadre/paqss/imprimer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-white/15 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/25 transition-colors"
+          >
+            <ClipboardList className="h-3.5 w-3.5" />
+            Tableau à imprimer
+          </Link>
         </div>
       </div>
 
